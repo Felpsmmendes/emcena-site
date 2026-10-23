@@ -1,0 +1,181 @@
+---
+import Foto from './Foto.astro';
+import { atracoes as todas } from '../data/site';
+// atrações com foto real primeiro: o carrossel não abre num espaço vazio
+const arquivos = Object.keys(import.meta.glob('/src/assets/fotos/*.{jpg,jpeg,png,webp,avif}'));
+const temFoto = (n: string) => arquivos.some((p) => p.split('/').pop()!.replace(/\.[^.]+$/, '') === n);
+const atracoes = [...todas].sort((a, b) => Number(temFoto(b.foto)) - Number(temFoto(a.foto)));
+---
+<section id="atracoes" class="hs" aria-labelledby="atr-t" aria-roledescription="carrossel">
+  <div class="wrap hs__head">
+    <div>
+      <p class="eyebrow" data-reveal>Atrações</p>
+      <h2 class="h2" id="atr-t" data-reveal>Cada convidado sai com a festa na mão.</h2>
+    </div>
+    <div class="hs__ctrl" data-reveal>
+      <span class="hs__bar" aria-hidden="true"><span data-hs-progress></span></span>
+      <button type="button" class="hs__btn" data-hs-prev aria-label="Atrações anteriores">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+      </button>
+      <button type="button" class="hs__btn" data-hs-next aria-label="Próximas atrações">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+      </button>
+    </div>
+  </div>
+  <div class="hs__track" data-hs-track tabindex="0" aria-label="Lista de atrações — passa sozinha devagar; passe o mouse para pausar, use as setas ou arraste">
+    {[false, true].map((clone) => atracoes.map((a, i) => (
+      <a class="hs__card card" href={`/servicos/${a.slug}`} data-hs-card data-clone={clone ? '' : undefined}
+         aria-label={clone ? undefined : `${a.nome}: ${a.resumo}`} aria-hidden={clone ? 'true' : undefined} tabindex={clone ? -1 : undefined} draggable="false">
+        <Foto nome={a.foto} alt="" ratio="3 / 4" wipe={false} zoomHover sizes="(max-width: 900px) 78vw, 340px" sugestao={`Foto real: ${a.fotoLegenda.toLowerCase()}`} />
+        <div class="hs__info">
+          <span class="hs__n">{String(i + 1).padStart(2, '0')}</span>
+          <div>
+            <h3>{a.nome}</h3>
+            <p>{a.resumo}</p>
+          </div>
+        </div>
+      </a>
+    )))}
+  </div>
+</section>
+
+<script>
+  // Carrossel infinito: a lista vem duplicada (a cópia é escondida de leitores de tela)
+  // e, quando a rolagem passa da metade, volta a mesma distância sem o usuário perceber.
+  const track = document.querySelector<HTMLElement>('[data-hs-track]');
+  const prev = document.querySelector<HTMLButtonElement>('[data-hs-prev]');
+  const next = document.querySelector<HTMLButtonElement>('[data-hs-next]');
+  const bar = document.querySelector<HTMLElement>('[data-hs-progress]');
+  const VEL = window.innerWidth < 760 ? 16 : 26; // px por segundo — "bem devagar"
+  const ESPERA = 3500; // ms parado depois de qualquer interação
+
+  if (track && prev && next) {
+    const originais = track.querySelectorAll<HTMLElement>('[data-hs-card]:not([data-clone])');
+    const primeiroClone = track.querySelector<HTMLElement>('[data-clone]');
+    const metade = () => (primeiroClone && originais[0] ? primeiroClone.offsetLeft - originais[0].offsetLeft : 0);
+    const passo = () => {
+      const gap = parseFloat(getComputedStyle(track).columnGap || '20') || 20;
+      return originais[0] ? originais[0].offsetWidth + gap : track.clientWidth * 0.8;
+    };
+    const atualiza = () => {
+      const h = metade();
+      if (bar && h) bar.style.transform = `scaleX(${Math.max(1 / originais.length, ((track.scrollLeft % h) + passo()) / h)})`;
+    };
+
+    // volta para a primeira cópia quando passa da metade (só fora do modo automático)
+    let tFim: number | undefined;
+    const normaliza = () => {
+      const h = metade();
+      if (!h) return;
+      if (track.scrollLeft >= h) track.scrollLeft -= h;
+    };
+
+    // ---------- interação manual ----------
+    let ultimo = -Infinity, automatico = false, arrastando = false, moveu = false, x0 = 0, s0 = 0;
+    const mexeu = () => { ultimo = performance.now(); if (automatico) { automatico = false; track.classList.remove('is-auto'); } };
+
+    prev.addEventListener('click', () => {
+      mexeu();
+      if (track.scrollLeft < passo()) track.scrollLeft += metade();
+      track.scrollBy({ left: -passo(), behavior: 'smooth' });
+    });
+    next.addEventListener('click', () => { mexeu(); track.scrollBy({ left: passo(), behavior: 'smooth' }); });
+    track.addEventListener('scroll', () => {
+      atualiza();
+      if (!automatico && !arrastando) { clearTimeout(tFim); tFim = window.setTimeout(normaliza, 160); }
+    }, { passive: true });
+    window.addEventListener('resize', atualiza);
+    track.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') { e.preventDefault(); next.click(); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); prev.click(); }
+    });
+    ['wheel', 'touchstart', 'focusin'].forEach((ev) => track.addEventListener(ev, mexeu, { passive: true }));
+    atualiza();
+
+    // arrastar com o mouse (no toque o navegador já desliza sozinho)
+    track.addEventListener('pointerdown', (e) => {
+      mexeu();
+      if (e.pointerType !== 'mouse' || e.button !== 0) return;
+      e.preventDefault();
+      arrastando = true; moveu = false; x0 = e.clientX; s0 = track.scrollLeft;
+      track.classList.add('is-drag');
+    });
+    window.addEventListener('pointermove', (e) => {
+      if (!arrastando) return;
+      const dx = e.clientX - x0;
+      if (Math.abs(dx) > 5) moveu = true;
+      track.scrollLeft = s0 - dx;
+    });
+    const solta = () => {
+      if (!arrastando) return;
+      arrastando = false; mexeu();
+      track.classList.remove('is-drag');
+      const p = passo();
+      track.scrollTo({ left: Math.round(track.scrollLeft / p) * p, behavior: 'smooth' });
+    };
+    window.addEventListener('pointerup', solta);
+    window.addEventListener('pointercancel', solta);
+    track.addEventListener('dragstart', (e) => e.preventDefault());
+    track.addEventListener('click', (e) => { if (moveu) { e.preventDefault(); e.stopPropagation(); moveu = false; } }, true);
+
+    // ---------- movimento automático ----------
+    const reduz = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let visivel = false, emCima = false, pos = 0, tAnt = 0;
+    new IntersectionObserver(([e]) => { visivel = e.isIntersecting; }, { threshold: 0.35 }).observe(track);
+    track.addEventListener('mouseenter', () => { emCima = true; });
+    track.addEventListener('mouseleave', () => { emCima = false; });
+
+    const quadro = (t: number) => {
+      const dt = tAnt ? Math.min(0.05, (t - tAnt) / 1000) : 0;
+      tAnt = t;
+      const pausado = reduz || !visivel || emCima || arrastando || document.hidden || t - ultimo < ESPERA;
+      if (!pausado) {
+        if (!automatico) { automatico = true; track.classList.add('is-auto'); pos = track.scrollLeft; }
+        pos += VEL * dt;
+        const h = metade();
+        if (h && pos >= h) pos -= h;
+        track.scrollLeft = Math.round(pos);
+      }
+      requestAnimationFrame(quadro);
+    };
+    if (!reduz) requestAnimationFrame(quadro);
+  }
+</script>
+
+<style>
+  .hs { margin-top: clamp(80px, 10vw, 120px); }
+  .hs__head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 20px; margin-bottom: 36px; }
+  .hs__head .h2 { max-width: 900px; }
+  .hs__ctrl { display: flex; align-items: center; gap: 10px; }
+  .hs__bar { width: 120px; height: 2px; background: var(--line); margin-right: 10px; overflow: hidden; }
+  .hs__bar span { display: block; height: 100%; background: var(--ink); transform-origin: left; transform: scaleX(.08); transition: transform .3s var(--ease); }
+  .hs__btn {
+    width: 52px; height: 52px; border-radius: 50%; border: 1px solid var(--ink); background: transparent; color: var(--ink);
+    display: grid; place-items: center; cursor: pointer;
+    transition: background .3s var(--ease), color .3s var(--ease), opacity .3s var(--ease);
+  }
+  .hs__btn:hover:not(:disabled) { background: var(--ink); color: var(--bg); }
+  .hs__btn:disabled { opacity: .25; cursor: default; }
+
+  .hs__track {
+    --pad: max(var(--gutter), calc((100vw - var(--wrap)) / 2 + var(--gutter)));
+    display: flex; gap: 20px;
+    overflow-x: auto; overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory; scroll-padding-inline: var(--pad);
+    padding: 0 var(--pad) 12px;
+    scrollbar-width: none; cursor: grab;
+  }
+  .hs__track::-webkit-scrollbar { display: none; }
+  .hs__track:focus-visible { outline: 2px solid var(--gold); outline-offset: 6px; }
+  .hs__track.is-auto { scroll-snap-type: none; }
+  .hs__track.is-drag { cursor: grabbing; scroll-snap-type: none; user-select: none; }
+  .hs__track.is-drag .hs__card { pointer-events: none; }
+  .hs__card { flex: 0 0 clamp(260px, 26vw, 340px); scroll-snap-align: start; text-decoration: none; color: var(--ink); }
+  @media (max-width: 760px) { .hs__card { flex-basis: 78vw; } .hs__bar { display: none; } }
+  .hs__info { display: flex; gap: 14px; align-items: baseline; margin-top: 16px; }
+  .hs__n { font-family: var(--serif); font-size: 20px; color: var(--gold); }
+  .hs__card h3 { font-size: 19px; font-weight: 600; letter-spacing: -0.01em; }
+  .hs__card p { margin-top: 4px; font-size: 14px; line-height: 1.5; color: var(--muted); }
+  .hs__card:hover h3 { text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+  :global(.motion) [data-hs-card] { opacity: 0; transform: translateX(80px); }
+</style>

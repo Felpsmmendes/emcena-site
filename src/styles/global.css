@@ -1,0 +1,88 @@
+:root {
+  color-scheme: only light;
+  --bg: #f4f0e8;
+  --bg-2: #fbf9f4;
+  --ink: #16140f;
+  --ink-2: #3e392f;
+  --muted: #5e584e;
+  --line: #ddd5c6;
+  --line-2: #e6dfd2;
+  --gold: #7a5c17;        /* texto dourado sobre claro (contraste AA) */
+  --gold-soft: #d2b46a;   /* dourado sobre escuro */
+  --ph: linear-gradient(160deg, #dcd3c2, #c9bea8);
+  --dark: #16140f;
+  --dark-line: #3a352b;
+  --dark-muted: #b3ab9b;
+
+  --sans: 'Instrument Sans', system-ui, sans-serif;
+  --serif: 'Instrument Serif', Georgia, serif;
+
+  --wrap: 1200px;
+  --gutter: 24px;
+  --radius: 6px;
+  --ease: cubic-bezier(.16, 1, .3, 1);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+img, video { display: block; max-width: 100%; height: auto; }
+a { color: var(--gold); }
+a:hover { color: #5a430f; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 2px; }
+h1, h2, h3 { margin: 0; font-weight: 500; letter-spacing: -0.02em; }
+p { margin: 0; }
+em.s { font-family: var(--serif); font-weight: 400; font-style: italic; letter-spacing: -0.01em; }
+
+.wrap { max-width: var(--wrap); margin: 0 auto; padding-inline: var(--gutter); }
+.section { padding-block: clamp(80px, 11vw, 128px) 0; }
+.eyebrow { font-size: 13px; font-weight: 600; letter-spacing: .06em; color: var(--gold); margin-bottom: 14px; }
+.h2 { font-size: clamp(32px, 3.8vw, 50px); line-height: 1.08; max-width: 760px; }
+.lead { font-size: 18px; line-height: 1.6; color: #4f493f; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  min-height: 48px; padding: 0 24px; border-radius: 8px;
+  font: 600 15px/1 var(--sans); text-decoration: none; cursor: pointer;
+  border: 1px solid var(--ink); background: var(--ink); color: var(--bg);
+  transition: background .3s var(--ease), color .3s var(--ease);
+}
+.btn:hover { background: #2b2720; color: var(--bg); }
+.btn--ghost { background: transparent; color: var(--ink); }
+.btn--ghost:hover { background: var(--ink); color: var(--bg); }
+.btn .arr { transition: transform .35s var(--ease); }
+.btn:hover .arr, .link:hover .arr { transform: translateX(5px); }
+.link { font-weight: 600; text-decoration: none; display: inline-flex; gap: 6px; align-items: center; }
+.link .arr { display: inline-block; transition: transform .35s var(--ease); }
+
+.ul { text-decoration: none; background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat; transition: background-size .4s var(--ease); padding-bottom: 2px; }
+.ul:hover { background-size: 100% 1px; }
+
+/* ---------- Estados iniciais das animações ----------
+   Só valem quando <html> tem .motion (adicionada no <head> se o
+   usuário não pediu movimento reduzido). Se o JS falhar, um timeout
+   remove a classe e tudo aparece. */
+.motion [data-reveal] { opacity: 0; transform: translateY(36px); }
+.motion [data-wipe] { clip-path: inset(100% 0 0 0); }
+.motion [data-wipe] > .zin { transform: scale(1.16); }
+.motion [data-line] { transform: scaleX(0); transform-origin: left; }
+.motion .hero-line > span { transform: translateY(105%); }
+.motion [data-fade] { opacity: 0; transform: translateY(18px); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+/* faixa escura seguida de seção escura: emenda sem faixa bege no meio */
+section.fx + section.pk { margin-top: 0 !important; }

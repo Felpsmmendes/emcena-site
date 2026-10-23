@@ -1,0 +1,21 @@
+---
+import Foto from './Foto.astro';
+import { historia } from '../data/site';
+---
+<section id="quem-faz" class="wrap section qf">
+  <Foto nome="equipe" alt="Equipe da Em Cena Eventos em evento corporativo" ratio="5 / 4" sugestao="Foto real: fundadores com a equipe em evento" />
+  <div>
+    <p class="eyebrow" data-reveal>Quem faz</p>
+    <h2 class="qf__h" data-reveal>{historia.titulo} <em class="s">{historia.tituloDestaque}</em></h2>
+    {historia.paragrafos.map((p) => <p class="qf__p" data-reveal>{p}</p>)}
+    <blockquote data-reveal>“{historia.citacao}”<span>{historia.autor}</span></blockquote>
+  </div>
+</section>
+
+<style>
+  .qf { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 56px; align-items: center; }
+  .qf__h { font-size: clamp(30px, 3.4vw, 44px); line-height: 1.1; margin-bottom: 22px; }
+  .qf__p { font-size: 16px; line-height: 1.7; color: #4f493f; margin-bottom: 16px; }
+  blockquote { margin: 28px 0 0; padding-top: 22px; border-top: 1px solid var(--line); font-family: var(--serif); font-style: italic; font-size: 26px; line-height: 1.35; }
+  blockquote span { display: block; margin-top: 10px; font-family: var(--sans); font-style: normal; font-size: 14px; color: var(--muted); }
+</style>

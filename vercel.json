@@ -1,0 +1,11 @@
+{
+  "redirects": [
+    { "source": "/bar-para-coqueteis", "destination": "/servicos/bar-de-drinks", "permanent": true },
+    { "source": "/cabine-fotografica", "destination": "/servicos/cabine-fotografica", "permanent": true },
+    { "source": "/servicos-oferecidos", "destination": "/#servicos", "permanent": true },
+    { "source": "/quem-somos", "destination": "/#quem-faz", "permanent": true },
+    { "source": "/galeria-de-fotos", "destination": "/#atracoes", "permanent": true },
+    { "source": "/contato", "destination": "/orcamento", "permanent": true },
+    { "source": "/home", "destination": "/", "permanent": true }
+  ]
+}

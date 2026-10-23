@@ -1,0 +1,41 @@
+---
+import { faq as todas, linkWhatsApp } from '../data/site';
+interface Props { itens?: { q: string; a: string }[]; titulo?: string; servico?: string }
+const { itens = todas, titulo = 'O que perguntam antes de fechar.', servico = '' } = Astro.props;
+const jsonLd = { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: itens.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) };
+---
+<section id="duvidas" class="wrap section faq">
+  <div class="faq__lado">
+    <p class="eyebrow" data-reveal>Dúvidas frequentes</p>
+    <h2 class="faq__h" data-reveal>{titulo}</h2>
+    <p class="faq__mais" data-reveal>Não achou a sua? <a class="link" href={linkWhatsApp(servico)} target="_blank" rel="noopener">Pergunte no WhatsApp <span class="arr" aria-hidden="true">›</span></a></p>
+  </div>
+  <div class="lista">
+    {itens.map((f) => (
+      <details data-reveal>
+        <summary><span>{f.q}</span><span class="ico" aria-hidden="true">+</span></summary>
+        <p>{f.a}</p>
+      </details>
+    ))}
+  </div>
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+</section>
+
+<style>
+  .faq { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: clamp(32px, 6vw, 96px); align-items: start; }
+  @media (max-width: 900px) { .faq { grid-template-columns: 1fr; } }
+  .faq__lado { position: sticky; top: 110px; }
+  @media (max-width: 900px) { .faq__lado { position: static; } }
+  .faq__h { font-size: clamp(30px, 3.4vw, 44px); line-height: 1.08; }
+  .faq__mais { margin-top: 24px; font-size: 15px; color: var(--muted); }
+  .lista { border-top: 1px solid var(--ink); }
+  details { border-bottom: 1px solid var(--line); }
+  summary { list-style: none; cursor: pointer; min-height: 64px; padding: 22px 0; display: flex; justify-content: space-between; align-items: center; gap: 20px; font-size: 18px; font-weight: 500; letter-spacing: -0.01em; }
+  summary::-webkit-details-marker { display: none; }
+  summary:hover span:first-child { color: var(--gold); }
+  summary span:first-child { transition: color .3s var(--ease); }
+  .ico { font-size: 24px; line-height: 1; color: var(--gold); transition: transform .45s var(--ease); }
+  details[open] .ico { transform: rotate(45deg); }
+  details p { padding-bottom: 24px; font-size: 16px; line-height: 1.65; color: #4f493f; max-width: 620px; animation: abre .5s var(--ease); }
+  @keyframes abre { from { opacity: 0; transform: translateY(-6px); } }
+</style>

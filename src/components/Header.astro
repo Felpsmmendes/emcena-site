@@ -1,0 +1,76 @@
+---
+import Logo from './Logo.astro';
+const links = [
+  { href: '/#servicos', t: 'Serviços' },
+  { href: '/#pacotes', t: 'Pacotes' },
+  { href: '/#atracoes', t: 'Atrações' },
+  { href: '/#processo', t: 'Como funciona' },
+  { href: '/#quem-faz', t: 'Quem somos' },
+];
+---
+<header class="hdr" data-hdr>
+  <div class="wrap hdr__in">
+    <a href="/" class="logo" aria-label="Em Cena Eventos — início">
+      <Logo altura={56} />
+    </a>
+    <nav aria-label="Principal" class="nav" id="menu">
+      {links.map((l) => <a class="ul" href={l.href}>{l.t}</a>)}
+    </nav>
+    <div class="hdr__acts">
+      <a class="btn hdr__cta" href="/orcamento">Pedir orçamento <span class="arr" aria-hidden="true">›</span></a>
+      <button class="burger" type="button" aria-controls="menu" aria-expanded="false" aria-label="Abrir menu" data-burger>
+        <span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<script>
+  const b = document.querySelector<HTMLButtonElement>('[data-burger]');
+  const hdr = document.querySelector<HTMLElement>('[data-hdr]');
+  b?.addEventListener('click', () => {
+    const open = b.getAttribute('aria-expanded') !== 'true';
+    b.setAttribute('aria-expanded', String(open));
+    b.setAttribute('aria-label', open ? 'Fechar menu' : 'Abrir menu');
+    hdr?.classList.toggle('is-open', open);
+  });
+  document.querySelectorAll('#menu a').forEach((a) => a.addEventListener('click', () => {
+    hdr?.classList.remove('is-open'); b?.setAttribute('aria-expanded', 'false');
+  }));
+</script>
+
+<style>
+  .hdr { position: sticky; top: 0; z-index: 50; background: var(--bg); border-bottom: 1px solid var(--line); transition: background .4s var(--ease), box-shadow .4s var(--ease); }
+  :global(html.scrolled) .hdr { background: rgba(244, 240, 232, .86); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+  .hdr__in { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-block: 16px; transition: padding .4s var(--ease); }
+  :global(html.scrolled) .hdr__in { padding-block: 8px; }
+  .logo :global(svg) { height: 56px !important; transition: height .4s var(--ease); }
+  :global(html.scrolled) .logo :global(svg) { height: 44px !important; }
+  @media (max-width: 900px) { .logo :global(svg) { height: 46px !important; } }
+  .logo { display: flex; align-items: baseline; gap: 8px; color: var(--ink); text-decoration: none; }
+  .logo__a { font-family: var(--serif); font-size: 28px; line-height: 1; }
+  .logo__b { font-size: 11px; letter-spacing: 3px; color: var(--gold); font-weight: 600; }
+  .nav { display: flex; gap: 26px; font-size: 14px; }
+  .nav a { color: var(--ink); }
+  .hdr__acts { display: flex; align-items: center; gap: 10px; }
+  .hdr__cta { min-height: 42px; padding: 0 18px; font-size: 14px; }
+  .burger { display: none; width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 8px; background: transparent; cursor: pointer; position: relative; }
+  .burger span { position: absolute; left: 12px; right: 12px; height: 1.5px; background: var(--ink); transition: transform .35s var(--ease); }
+  .burger span:first-child { top: 17px; } .burger span:last-child { top: 25px; }
+  .hdr.is-open .burger span:first-child { transform: translateY(4px) rotate(45deg); }
+  .hdr.is-open .burger span:last-child { transform: translateY(-4px) rotate(-45deg); }
+
+  @media (max-width: 900px) {
+    .burger { display: block; }
+    .hdr__cta { display: none; }
+    .nav {
+      position: absolute; left: 0; right: 0; top: 100%;
+      flex-direction: column; gap: 0; padding: 8px var(--gutter) 20px;
+      background: var(--bg); border-bottom: 1px solid var(--line);
+      clip-path: inset(0 0 100% 0); visibility: hidden;
+      transition: clip-path .5s var(--ease), visibility 0s .5s;
+    }
+    .nav a { padding: 14px 0; font-size: 20px; font-family: var(--serif); border-bottom: 1px solid var(--line-2); background: none; }
+    .hdr.is-open .nav { clip-path: inset(0); visibility: visible; transition: clip-path .5s var(--ease); }
+  }
+</style>

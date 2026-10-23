@@ -1,0 +1,47 @@
+---
+import { contato, linkWhatsApp } from '../data/site';
+interface Props { titulo?: string; destaque?: string }
+const { titulo = 'Sua data ainda', destaque = 'está livre?' } = Astro.props;
+const opcoes = [
+  { t: 'Bar de drinks', d: 'Cardápio, estrutura e equipe.', s: 'Bar de drinks' },
+  { t: 'Atrações fotográficas', d: 'Totens, espelho, 360° e mais.', s: 'Atrações fotográficas' },
+  { t: 'Bar + atrações', d: 'Tudo com um fornecedor só.', s: 'Bar de drinks + atrações' },
+  { t: 'Evento corporativo', d: 'Confraternizações e ações de marca.', s: 'Evento corporativo' },
+];
+---
+<section id="contratar" class="wrap section">
+  <div class="box" data-reveal>
+    <div>
+      <h2 class="h2">{titulo} <em class="s">{destaque}</em></h2>
+      <p class="box__txt">Faça o orçamento pelo site em um minuto, ou escolha ao lado e o WhatsApp abre com a mensagem pronta.</p>
+      <a class="btn" href="/orcamento">Fazer orçamento pelo site <span class="arr" aria-hidden="true">›</span></a>
+      <p class="box__ct">{contato.whatsappExibicao}<br />{contato.email}<br />{contato.horario}</p>
+    </div>
+    <div>
+      <p class="eyebrow">O que você precisa?</p>
+      <div class="opts">
+        {opcoes.map((o) => (
+          <a class="opt" href={linkWhatsApp(o.s)} target="_blank" rel="noopener">
+            <span><strong>{o.t}</strong><span>{o.d}</span></span>
+            <span class="opt__arr" aria-hidden="true">›</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .box { background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--radius); padding: clamp(32px, 5vw, 64px); display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 48px; }
+  .box em { color: var(--gold); }
+  .box__txt { margin: 18px 0 28px; font-size: 16px; line-height: 1.65; color: #4f493f; max-width: 440px; }
+  .box__ct { margin-top: 28px; font-size: 14px; line-height: 1.9; color: var(--muted); }
+  .opts { display: flex; flex-direction: column; gap: 10px; }
+  .opt { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 20px; border: 1px solid var(--line); border-radius: var(--radius); color: var(--ink); background: var(--bg); text-decoration: none; transition: background .3s var(--ease), border-color .3s var(--ease), transform .3s var(--ease), color .3s var(--ease); }
+  .opt:hover { background: var(--ink); border-color: var(--ink); color: var(--bg); transform: translateX(4px); }
+  .opt strong { display: block; font-size: 16px; }
+  .opt span span { font-size: 14px; color: var(--muted); transition: color .3s var(--ease); }
+  .opt:hover span span { color: var(--dark-muted); }
+  .opt__arr { color: var(--gold); font-size: 20px; }
+  .opt:hover .opt__arr { color: var(--gold-soft); }
+</style>

@@ -1,0 +1,17 @@
+---
+/**
+ * Logo oficial em vetor (src/assets/logo.svg, traçado do PNG original).
+ * As letras usam a cor do texto (preto no claro, branco com `claro`); a azeitona é sempre verde-limão.
+ */
+import logoSvg from '../assets/logo.svg?raw';
+interface Props { claro?: boolean; altura?: number }
+const { claro = false, altura = 40 } = Astro.props;
+const svg = logoSvg.replace('<svg ', '<svg role="img" aria-label="Em Cena Eventos" class="logo-img" ');
+---
+<span class:list={['logo', { 'logo--claro': claro }]} style={`--h:${altura}px`} set:html={svg} />
+
+<style>
+  .logo { display: inline-flex; color: var(--ink); line-height: 0; }
+  .logo--claro { color: #fff; }
+  .logo :global(svg) { height: var(--h); width: auto; display: block; }
+</style>

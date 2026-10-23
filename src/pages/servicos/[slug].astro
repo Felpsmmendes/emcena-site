@@ -1,0 +1,98 @@
+---
+import Base from '../../layouts/Base.astro';
+import Foto from '../../components/Foto.astro';
+import Faq from '../../components/Faq.astro';
+import Contratar from '../../components/Contratar.astro';
+import Pacotes from '../../components/Pacotes.astro';
+import { servicos, faq, linkWhatsApp, tiposEvento, type Servico } from '../../data/site';
+
+export function getStaticPaths() {
+  return servicos.map((s) => ({ params: { slug: s.slug }, props: { s } }));
+}
+const { s } = Astro.props as { s: Servico };
+const outros = servicos.filter((o) => o.slug !== s.slug).slice(0, 4);
+const perguntas = s.perguntas?.length ? s.perguntas : s.tipo === 'bar'
+  ? faq.filter((f) => /cardápio|vidro|bartenders|tempo|reservo/i.test(f.q))
+  : faq.filter((f) => /tempo|reservo|fora/i.test(f.q));
+const inclui = s.inclui.filter((i) => !i.startsWith('CONFIRMAR'));
+---
+<Base title={s.seoTitulo} description={s.seoDescricao} servicoWhats={s.nome}>
+  <nav class="wrap migalha" aria-label="Você está em">
+    <a class="ul" href="/">Início</a> <span aria-hidden="true">/</span> <a class="ul" href="/#servicos">Serviços</a> <span aria-hidden="true">/</span> <span aria-current="page">{s.nome}</span>
+  </nav>
+
+  <section class="wrap sv">
+    <div>
+      <p class="eyebrow" data-fade>{s.tipo === 'bar' ? 'Bar de drinks' : 'Atração fotográfica'}</p>
+      <h1 class="sv__h1">
+        <span class="hero-line"><span>{s.nome}</span></span>
+        <span class="hero-line"><span><em class="s">{s.frase}</em></span></span>
+      </h1>
+      <p class="lead sv__lead" data-fade>{s.resumo} Para {tiposEvento.slice(0, 4).join(', ').toLowerCase()} e eventos corporativos em São Paulo e Grande ABC.</p>
+      <div class="sv__ctas" data-fade>
+        <a class="btn" href={`/orcamento?servico=${encodeURIComponent(s.nome)}`}>Pedir orçamento <span class="arr" aria-hidden="true">›</span></a>
+        <a class="btn btn--ghost" href={linkWhatsApp(s.nome)} target="_blank" rel="noopener">Falar no WhatsApp <span class="arr" aria-hidden="true">›</span></a>
+      </div>
+    </div>
+    <div data-hero-wipe class="sv__img">
+      <Foto nome={s.foto} alt={s.fotoLegenda} ratio="4 / 5" wipe={false} eager sugestao={`Foto real: ${s.fotoLegenda.toLowerCase()} (1200×1500)`} />
+    </div>
+  </section>
+
+  {s.comoFunciona?.length ? (
+    <section class="wrap section cf">
+      <p class="eyebrow" data-reveal>Como funciona</p>
+      <div class="cf__txt">{s.comoFunciona.map((par) => <p data-reveal>{par}</p>)}</div>
+    </section>
+  ) : null}
+
+  <section class="wrap section">
+    <p class="eyebrow" data-reveal>O que está incluso</p>
+    <h2 class="h2" data-reveal>Tudo pronto antes do primeiro convidado chegar.</h2>
+    <ul class="inc">
+      {inclui.map((i, n) => (
+        <li data-reveal><span class="inc__n">{String(n + 1).padStart(2, '0')}</span>{i}</li>
+      ))}
+    </ul>
+  </section>
+
+  {s.tipo === 'bar' && <Pacotes />}
+
+  <section class="wrap section">
+    <p class="eyebrow" data-reveal>Combine com</p>
+    <h2 class="h2" data-reveal>Fica melhor com um fornecedor só.</h2>
+    <div class="outros">
+      {outros.map((o) => (
+        <a class="card outro" href={`/servicos/${o.slug}`} data-reveal>
+          <Foto nome={o.foto} alt={o.fotoLegenda} ratio="3 / 4" wipe={false} zoomHover sizes="280px" sugestao="Foto real" />
+          <h3>{o.nome}</h3>
+          <p>{o.resumo}</p>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <Faq itens={perguntas} titulo={`Dúvidas sobre ${s.tipo === 'bar' ? 'o bar' : s.nome}.`} servico={s.nome} />
+  <Contratar />
+</Base>
+
+<style>
+  .migalha { padding-top: 24px; font-size: 13px; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; }
+  .migalha a { color: var(--muted); }
+  .sv { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: clamp(40px, 6vw, 72px); align-items: center; padding-block: 40px 0; }
+  .sv__h1 { font-size: clamp(40px, 5.2vw, 70px); line-height: 1.04; letter-spacing: -0.035em; }
+  .sv__h1 em { color: var(--gold); }
+  .hero-line { display: block; overflow: hidden; padding-bottom: .06em; }
+  .hero-line > span { display: block; }
+  .sv__lead { margin-top: 24px; max-width: 520px; }
+  .sv__ctas { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 12px; }
+  .sv__img { border-radius: var(--radius); overflow: hidden; }
+  .cf__txt { max-width: 760px; display: grid; gap: 18px; font-size: clamp(19px, 1.8vw, 23px); line-height: 1.55; color: var(--ink-2); }
+  .inc { list-style: none; margin: 40px 0 0; padding: 0; border-top: 1px solid var(--ink); display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); column-gap: 40px; }
+  .inc li { display: flex; gap: 18px; padding: 22px 0; border-bottom: 1px solid var(--line); font-size: 17px; }
+  .inc__n { font-family: var(--serif); color: var(--gold); font-size: 20px; min-width: 28px; }
+  .outros { margin-top: 40px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 20px; }
+  .outro { color: var(--ink); text-decoration: none; }
+  .outro h3 { margin-top: 14px; font-size: 18px; font-weight: 600; }
+  .outro p { margin-top: 4px; font-size: 14px; color: var(--muted); }
+</style>

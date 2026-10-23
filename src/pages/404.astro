@@ -1,0 +1,19 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Página não encontrada" description="Esta página não existe mais. Veja os serviços da Em Cena Eventos.">
+  <section class="wrap nf">
+    <p class="eyebrow">Erro 404</p>
+    <h1><span class="hero-line"><span>Essa cena</span></span><span class="hero-line"><span><em class="s">saiu do roteiro.</em></span></span></h1>
+    <p class="lead" data-fade>A página que você procurou não existe mais. O resto do espetáculo continua por aqui.</p>
+    <div data-fade class="nf__ctas"><a class="btn" href="/">Voltar ao início <span class="arr" aria-hidden="true">›</span></a><a class="btn btn--ghost" href="/orcamento">Pedir orçamento</a></div>
+  </section>
+</Base>
+<style>
+  .nf { padding-block: clamp(80px, 14vw, 160px) 0; }
+  h1 { font-size: clamp(44px, 7vw, 96px); line-height: 1; letter-spacing: -0.04em; margin-bottom: 24px; }
+  h1 em { color: var(--gold); }
+  .hero-line { display: block; overflow: hidden; padding-bottom: .06em; }
+  .hero-line > span { display: block; }
+  .nf__ctas { margin-top: 32px; display: flex; gap: 12px; flex-wrap: wrap; }
+</style>

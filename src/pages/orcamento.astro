@@ -1,0 +1,263 @@
+---
+import Base from '../layouts/Base.astro';
+import { servicos, contato } from '../data/site';
+const tipos = ['Casamento', 'Formatura', '15 anos', 'Aniversário', 'Corporativo', 'Outro'];
+---
+<Base title="Pedir orçamento" description="Peça o orçamento do bar de drinks e das atrações fotográficas da Em Cena Eventos em um minuto. Resposta por WhatsApp e e-mail.">
+  <section class="wrap orc">
+    <div class="orc__main">
+      <p class="eyebrow" data-fade>Orçamento · <span data-passo-txt>passo 1 de 3</span></p>
+      <div class="barra" aria-hidden="true"><span data-barra></span></div>
+
+      <form data-form novalidate>
+        <!-- armadilha para robôs: fica invisível para pessoas -->
+        <div class="hp" aria-hidden="true"><label>Não preencha <input name="site" tabindex="-1" autocomplete="off" /></label></div>
+
+        <fieldset class="passo" data-passo="1">
+          <legend class="orc__h"><span class="hero-line"><span>Conta pra gente</span></span><span class="hero-line"><span><em class="s">sobre o seu evento.</em></span></span></legend>
+          <p class="lbl" id="tipo-l">Tipo de evento</p>
+          <div class="chips" role="radiogroup" aria-labelledby="tipo-l">
+            {tipos.map((t, i) => <label class="chip"><input type="radio" name="tipo" value={t} checked={i === 0} /><span>{t}</span></label>)}
+          </div>
+          <div class="campos">
+            <label>Data do evento<input type="date" name="data" /></label>
+            <label>Convidados<input type="number" name="convidados" min="1" inputmode="numeric" placeholder="ex.: 150" /></label>
+            <label class="full">Cidade / local<input type="text" name="local" placeholder="ex.: Santo André, Espaço X" /></label>
+          </div>
+        </fieldset>
+
+        <fieldset class="passo" data-passo="2" hidden>
+          <legend class="orc__h">O que entra <em class="s">em cena?</em></legend>
+          <p class="lbl">Escolha um ou mais serviços</p>
+          <div class="servs">
+            {servicos.map((s) => (
+              <label class="serv"><input type="checkbox" name="servicos" value={s.nome} /><span><strong>{s.nome}</strong><small>{s.resumo}</small></span></label>
+            ))}
+          </div>
+          <label class="full msg">Algo mais que a gente deva saber? (opcional)<textarea name="mensagem" rows="3" placeholder="Pacote de interesse, horário, ideias..."></textarea></label>
+        </fieldset>
+
+        <fieldset class="passo" data-passo="3" hidden>
+          <legend class="orc__h">Para onde mandamos <em class="s">a sua proposta?</em></legend>
+          <div class="campos">
+            <label class="full">Nome<input type="text" name="nome" autocomplete="name" required /></label>
+            <label>WhatsApp<input type="tel" name="telefone" autocomplete="tel" inputmode="tel" placeholder="(11) 9 ____-____" /></label>
+            <label>E-mail<input type="email" name="email" autocomplete="email" /></label>
+          </div>
+          <p class="nota">Respondemos em horário comercial: {contato.horario}.</p>
+        </fieldset>
+
+        <div class="erro" role="alert" data-erro hidden></div>
+
+        <div class="nav" data-nav>
+          <button type="button" class="btn btn--ghost" data-voltar hidden>Voltar</button>
+          <button type="submit" class="btn" data-avancar>Continuar <span class="arr" aria-hidden="true">›</span></button>
+        </div>
+      </form>
+
+      <div class="ok" data-ok hidden tabindex="-1">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M7.5 12.5l3 3 6-6.5"/></svg>
+        <h2 class="orc__h">Pedido recebido.</h2>
+        <p>Sua proposta chega por WhatsApp ou e-mail. Se quiser adiantar, mande a mensagem já preenchida:</p>
+        <a class="btn" data-wa href="#" target="_blank" rel="noopener">Continuar no WhatsApp <span class="arr" aria-hidden="true">›</span></a>
+      </div>
+    </div>
+
+    <aside class="resumo" aria-label="Resumo do pedido">
+      <p class="eyebrow">Seu pedido</p>
+      <dl>
+        <div><dt>Evento</dt><dd data-r="tipo">—</dd></div>
+        <div><dt>Data</dt><dd data-r="data">—</dd></div>
+        <div><dt>Convidados</dt><dd data-r="convidados">—</dd></div>
+        <div class="col"><dt>Serviços</dt><dd data-r="servicos">—</dd></div>
+        <div><dt>Duração padrão</dt><dd data-r="duracao">—</dd></div>
+      </dl>
+      <p class="resumo__pg"><strong>20% de entrada</strong> reserva a data. Saldo até 20 dias antes, no boleto ou cartão.</p>
+    </aside>
+  </section>
+</Base>
+
+<script>
+  import { linkWhatsApp } from '../data/site';
+  import { gsap } from 'gsap';
+
+  const URL_SB = import.meta.env.PUBLIC_SUPABASE_URL as string | undefined;
+  const KEY_SB = import.meta.env.PUBLIC_SUPABASE_ANON_KEY as string | undefined;
+  const SLUG = (import.meta.env.PUBLIC_CAPTACAO_SLUG as string | undefined) ?? 'em-cena';
+
+  const form = document.querySelector<HTMLFormElement>('[data-form]')!;
+  const passos = Array.from(form.querySelectorAll<HTMLFieldSetElement>('[data-passo]'));
+  const voltar = form.querySelector<HTMLButtonElement>('[data-voltar]')!;
+  const avancar = form.querySelector<HTMLButtonElement>('[data-avancar]')!;
+  const erro = form.querySelector<HTMLElement>('[data-erro]')!;
+  const barra = document.querySelector<HTMLElement>('[data-barra]')!;
+  const passoTxt = document.querySelector<HTMLElement>('[data-passo-txt]')!;
+  const inicio = Date.now();
+  const reduz = !document.documentElement.classList.contains('motion');
+  let atual = 0;
+
+  // pré-seleção vinda de outras páginas (?servico= ou ?pacote=)
+  const qs = new URLSearchParams(location.search);
+  const pre = qs.get('servico') ?? (qs.get('pacote') ? 'Bar de drinks' : null);
+  if (pre) form.querySelectorAll<HTMLInputElement>('input[name="servicos"]').forEach((i) => { if (i.value === pre) i.checked = true; });
+  if (qs.get('pacote')) (form.elements.namedItem('mensagem') as HTMLTextAreaElement).value = `Pacote de interesse: ${qs.get('pacote')}`;
+
+  const dados = () => {
+    const f = new FormData(form);
+    return {
+      tipo: String(f.get('tipo') ?? ''),
+      data: String(f.get('data') ?? ''),
+      convidados: String(f.get('convidados') ?? ''),
+      local: String(f.get('local') ?? ''),
+      servicos: f.getAll('servicos').map(String),
+      mensagem: String(f.get('mensagem') ?? ''),
+      nome: String(f.get('nome') ?? '').trim(),
+      telefone: String(f.get('telefone') ?? '').trim(),
+      email: String(f.get('email') ?? '').trim(),
+      armadilha: String(f.get('site') ?? ''),
+    };
+  };
+  const dataBR = (iso: string) => (iso ? iso.split('-').reverse().join('/') : '');
+
+  const atualizaResumo = () => {
+    const d = dados();
+    const set = (k: string, v: string) => { const el = document.querySelector(`[data-r="${k}"]`); if (el) el.textContent = v || '—'; };
+    set('tipo', d.tipo); set('data', dataBR(d.data)); set('convidados', d.convidados);
+    set('servicos', d.servicos.join(', '));
+    const bar = d.servicos.includes('Bar de drinks'); const foto = d.servicos.some((s) => s !== 'Bar de drinks');
+    set('duracao', bar && foto ? 'bar 5h · atrações 4h' : bar ? '5 horas' : foto ? '4 horas' : '');
+  };
+  form.addEventListener('input', atualizaResumo);
+  form.addEventListener('change', atualizaResumo);
+  atualizaResumo();
+
+  const mostraErro = (m: string) => { erro.textContent = m; erro.hidden = !m; };
+
+  const valida = (i: number) => {
+    const d = dados();
+    if (i === 1 && d.servicos.length === 0) return 'Escolha pelo menos um serviço.';
+    if (i === 2) {
+      if (d.nome.length < 2) return 'Digite seu nome.';
+      if (!d.telefone && !d.email) return 'Deixe um WhatsApp ou e-mail para a gente responder.';
+      if (d.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email)) return 'Confira o e-mail.';
+    }
+    return '';
+  };
+
+  const vai = (n: number) => {
+    const de = passos[atual], para = passos[n];
+    atual = n;
+    de.hidden = true; para.hidden = false;
+    voltar.hidden = n === 0;
+    avancar.innerHTML = n === passos.length - 1 ? 'Receber minha proposta <span class="arr" aria-hidden="true">›</span>' : 'Continuar <span class="arr" aria-hidden="true">›</span>';
+    passoTxt.textContent = `passo ${n + 1} de ${passos.length}`;
+    gsap.to(barra, { scaleX: (n + 1) / passos.length, duration: reduz ? 0 : 0.6, ease: 'expo.out' });
+    if (!reduz) gsap.fromTo(para.children, { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.7, stagger: 0.06, ease: 'expo.out', clearProps: 'all' });
+    para.querySelector<HTMLElement>('input, textarea')?.focus({ preventScroll: true });
+    window.scrollTo({ top: 0, behavior: reduz ? 'auto' : 'smooth' });
+  };
+  gsap.set(barra, { scaleX: 1 / passos.length });
+
+  voltar.addEventListener('click', () => { mostraErro(''); vai(atual - 1); });
+
+  const linkFinal = () => {
+    const d = dados();
+    return linkWhatsApp(d.servicos.join(', '), { nome: d.nome, tipo: d.tipo, data: dataBR(d.data), convidados: d.convidados, local: d.local });
+  };
+
+  const envia = async () => {
+    const d = dados();
+    if (!URL_SB || !KEY_SB) return { ok: true, semIntegracao: true };
+    const utm: Record<string, string> = {};
+    ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'].forEach((k) => { const v = qs.get(k); if (v) utm[k] = v; });
+    const msg = [`Tipo: ${d.tipo}`, d.local && `Local: ${d.local}`, `Serviços: ${d.servicos.join(', ')}`, d.mensagem].filter(Boolean).join('\n');
+    const r = await fetch(`${URL_SB}/rest/v1/rpc/captura_lead_publica`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: KEY_SB, Authorization: `Bearer ${KEY_SB}` },
+      body: JSON.stringify({
+        p_slug: SLUG, p_nome: d.nome, p_telefone: d.telefone || null, p_email: d.email || null, p_mensagem: msg,
+        p_data_evento: d.data || null, p_convidados: d.convidados ? Number(d.convidados) : null,
+        p_origem: 'site', p_utm: Object.keys(utm).length ? utm : null, p_armadilha: d.armadilha || null, p_tempo_ms: Date.now() - inicio,
+      }),
+    });
+    if (!r.ok) {
+      const j = await r.json().catch(() => ({}));
+      return { ok: false, msg: (j as { message?: string }).message ?? 'Não deu para enviar agora.' };
+    }
+    return { ok: true };
+  };
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const m = valida(atual);
+    mostraErro(m);
+    if (m) return;
+    if (atual < passos.length - 1) return vai(atual + 1);
+
+    avancar.disabled = true; avancar.textContent = 'Enviando…';
+    let res: { ok: boolean; msg?: string; semIntegracao?: boolean };
+    try { res = await envia(); } catch { res = { ok: false, msg: 'Sem conexão.' }; }
+    const wa = linkFinal();
+    if (res.semIntegracao) { window.location.href = wa; return; }
+    if (!res.ok) {
+      avancar.disabled = false; avancar.innerHTML = 'Tentar de novo <span class="arr" aria-hidden="true">›</span>';
+      mostraErro(`${res.msg} Se preferir, mande pelo WhatsApp: o pedido já vai preenchido.`);
+      return;
+    }
+    form.hidden = true;
+    const ok = document.querySelector<HTMLElement>('[data-ok]')!;
+    ok.querySelector<HTMLAnchorElement>('[data-wa]')!.href = wa;
+    ok.hidden = false; ok.focus();
+    if (!reduz) gsap.fromTo(ok.children, { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.8, stagger: 0.08, ease: 'expo.out' });
+  });
+</script>
+
+<style>
+  .orc { display: flex; flex-wrap: wrap; gap: 48px; align-items: flex-start; padding-block: 48px 0; }
+  .orc__main { flex: 999 1 560px; min-width: 0; }
+  .barra { height: 3px; background: var(--line); border-radius: 3px; margin: 4px 0 40px; overflow: hidden; }
+  .barra span { display: block; height: 100%; background: var(--ink); transform-origin: left; transform: scaleX(.33); }
+  fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+  .orc__h { display: block; padding: 0; font-size: clamp(32px, 4vw, 52px); line-height: 1.08; letter-spacing: -0.03em; font-weight: 500; margin-bottom: 32px; }
+  .orc__h em { color: var(--gold); }
+  .hero-line { display: block; overflow: hidden; padding-bottom: .06em; }
+  .hero-line > span { display: block; }
+  .lbl { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 28px; }
+  .chip input, .serv input { position: absolute; opacity: 0; pointer-events: none; }
+  .chip span { display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border: 1px solid var(--line); border-radius: 40px; cursor: pointer; font-weight: 500; transition: background .25s var(--ease), border-color .25s, color .25s; }
+  .chip input:checked + span { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .chip input:focus-visible + span, .serv input:focus-visible + span { outline: 2px solid var(--gold); outline-offset: 3px; }
+  .campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 16px; }
+  .campos label, .msg { display: flex; flex-direction: column; gap: 8px; font-size: 14px; font-weight: 600; }
+  .full { grid-column: 1 / -1; }
+  input:not([type="radio"]):not([type="checkbox"]), textarea {
+    font: 400 16px/1.4 var(--sans); color: var(--ink); background: var(--bg-2);
+    border: 1px solid var(--line); border-radius: 8px; padding: 14px; min-height: 50px;
+    transition: border-color .25s var(--ease), box-shadow .25s var(--ease);
+  }
+  input:focus, textarea:focus { outline: none; border-color: var(--ink); box-shadow: 0 0 0 3px rgba(122, 92, 23, .18); }
+  .servs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 10px; margin-bottom: 24px; }
+  .serv span { display: flex; flex-direction: column; gap: 4px; padding: 16px 18px; min-height: 76px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg-2); cursor: pointer; transition: border-color .25s var(--ease), background .25s var(--ease); }
+  .serv small { font-size: 13px; color: var(--muted); }
+  .serv input:checked + span { border-color: var(--ink); background: #ece6da; box-shadow: inset 0 0 0 1px var(--ink); }
+  .nota { margin-top: 16px; font-size: 13px; color: var(--muted); }
+  .erro { margin-top: 20px; padding: 12px 14px; border-radius: 8px; background: #f6e3dc; color: #7a2410; font-size: 14px; }
+  .nav { margin-top: 36px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .nav [data-avancar] { margin-left: auto; }
+  .nav button:disabled { opacity: .6; cursor: progress; }
+  .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+  .ok { padding: clamp(28px, 4vw, 48px); border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg-2); outline: none; }
+  .ok svg { color: var(--gold); margin-bottom: 16px; }
+  .ok .orc__h { margin-bottom: 12px; }
+  .ok p { margin-bottom: 24px; color: #4f493f; max-width: 480px; }
+  .resumo { flex: 1 1 300px; position: sticky; top: 96px; padding: 28px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg-2); }
+  .resumo dl { margin: 0; }
+  .resumo dl > div { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--line-2); font-size: 14px; }
+  .resumo .col { flex-direction: column; gap: 6px; }
+  .resumo dt { color: var(--muted); }
+  .resumo dd { margin: 0; text-align: right; }
+  .resumo .col dd { text-align: left; }
+  .resumo__pg { margin-top: 18px; font-size: 13px; line-height: 1.6; color: var(--muted); }
+  @media (max-width: 900px) { .resumo { position: static; } }
+</style>

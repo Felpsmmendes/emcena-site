@@ -1,0 +1,101 @@
+---
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { contato, linkWhatsApp } from '../data/site';
+
+interface Props {
+  title: string;
+  description: string;
+  servicoWhats?: string;
+  jsonLd?: Record<string, unknown>;
+}
+const { title, description, servicoWhats = '', jsonLd } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const naoIndexar = import.meta.env.PUBLIC_NOINDEX === '1';
+const fullTitle = title.includes('Em Cena') ? title : `${title} | Em Cena Eventos`;
+
+const negocio = {
+  '@context': 'https://schema.org',
+  '@type': 'LocalBusiness',
+  name: 'Em Cena Eventos',
+  description: 'Bar de drinks e atrações fotográficas para casamentos, formaturas, 15 anos e eventos corporativos.',
+  url: Astro.site?.toString(),
+  telephone: '+55 11 99245-3439',
+  email: contato.email,
+  foundingDate: '2017',
+  areaServed: ['São Paulo', 'Santo André', 'São Bernardo do Campo', 'São Caetano do Sul', 'Diadema', 'Mauá'],
+  sameAs: [contato.instagram],
+  openingHours: ['Mo-Fr 09:00-18:00', 'Sa 09:00-13:00'],
+};
+---
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{fullTitle}</title>
+  <meta name="description" content={description} />
+  <link rel="canonical" href={canonical} />
+  {naoIndexar && <meta name="robots" content="noindex, nofollow" />}
+  <meta name="theme-color" content="#f4f0e8" />
+  <!-- o site é só claro: impede o "modo escuro forçado" de Chrome/Samsung de inverter as cores -->
+  <meta name="color-scheme" content="only light" />
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="pt_BR" />
+  <meta property="og:site_name" content="Em Cena Eventos" />
+  <meta property="og:title" content={fullTitle} />
+  <meta property="og:description" content={description} />
+  <meta property="og:url" content={canonical} />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="sitemap" href="/sitemap-index.xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <script is:inline>
+    // Liga os estados iniciais das animações só se o usuário aceita movimento.
+    // Rede de segurança: se o script de animação não rodar em 3 s, mostra tudo.
+    (function () {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      var d = document.documentElement; d.classList.add('motion');
+      setTimeout(function () { if (!window.__motionReady) d.classList.remove('motion'); }, 3000);
+    })();
+  </script>
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd ?? negocio)} />
+</head>
+<body>
+  <a class="skip" href="#conteudo">Pular para o conteúdo</a>
+  <Header />
+  <main id="conteudo">
+    <slot />
+  </main>
+  <Footer />
+  <a class="mcta" href={linkWhatsApp(servicoWhats)} target="_blank" rel="noopener">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 12a8 8 0 0 1-11.8 7L4 20l1.1-4A8 8 0 1 1 20 12z"/></svg>
+    Pedir orçamento no WhatsApp
+  </a>
+  <script>
+    import { iniciarMovimento } from '../scripts/motion';
+    iniciarMovimento();
+  </script>
+</body>
+</html>
+
+<style>
+  .skip { position: absolute; left: 12px; top: -60px; z-index: 100; padding: 10px 14px; background: var(--ink); color: var(--bg); border-radius: 6px; }
+  .skip:focus { top: 12px; }
+  .mcta { display: none; }
+  @media (max-width: 760px) {
+    .mcta {
+      position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 40;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      min-height: 54px; border-radius: 10px; background: var(--ink); color: var(--bg);
+      font-weight: 600; font-size: 15px; text-decoration: none;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .25);
+      transform: translateY(140%); transition: transform .5s var(--ease);
+    }
+    .mcta svg { color: var(--gold-soft); }
+    :global(html.cta-on) .mcta { transform: none; }
+    :global(body) { padding-bottom: 84px; }
+  }
+</style>

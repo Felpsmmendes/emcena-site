@@ -1,0 +1,57 @@
+---
+import Logo from './Logo.astro';
+import { contato, servicos } from '../data/site';
+const ano = new Date().getFullYear();
+---
+<footer class="ft">
+  <div class="wrap ft__cta">
+    <p class="ft__q" data-reveal>Pronto para a sua data?</p>
+    <a class="btn btn--claro" href="/orcamento" data-reveal>Pedir orçamento <span class="arr" aria-hidden="true">›</span></a>
+  </div>
+
+  <div class="wrap ft__grid">
+    <div>
+      <p class="ft__h">Em Cena Eventos</p>
+      <p class="ft__desc">Bar de drinks e atrações fotográficas desde 2017. {contato.regiao}.</p>
+    </div>
+    <nav aria-label="Serviços">
+      <p class="ft__h">Serviços</p>
+      <ul>{servicos.map((s) => <li><a class="ul" href={`/servicos/${s.slug}`}>{s.nome}</a></li>)}</ul>
+    </nav>
+    <div>
+      <p class="ft__h">Contato</p>
+      <p><a class="ul" href={`https://wa.me/${contato.whatsapp}`} target="_blank" rel="noopener">WhatsApp {contato.whatsappExibicao}</a></p>
+      <p><a class="ul" href={`mailto:${contato.email}`}>{contato.email}</a></p>
+      <p>{contato.horario}</p>
+      <p><a class="ul" href={contato.instagram} target="_blank" rel="noopener">{contato.instagramHandle}</a></p>
+    </div>
+  </div>
+
+  <div class="ft__marca" aria-hidden="true">
+    <span class="ft__l"><Logo claro altura={280} /></span>
+  </div>
+
+  <div class="wrap ft__base">
+    <span>© {ano} Em Cena Eventos</span>
+    <a class="ul" href="#conteudo">Voltar ao topo ↑</a>
+  </div>
+</footer>
+
+<style>
+  .ft { background: var(--dark); color: #cfc7b8; margin-top: clamp(80px, 10vw, 120px); font-size: 14px; overflow: hidden; }
+  .ft a { color: #cfc7b8; }
+  .ft a:hover { color: #fff; }
+  .ft__cta { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 24px; padding-block: clamp(56px, 8vw, 88px) 48px; border-bottom: 1px solid var(--dark-line); }
+  .ft__q { font-size: clamp(30px, 4vw, 52px); letter-spacing: -0.03em; color: var(--bg); line-height: 1.05; }
+  .ft a.btn--claro, .ft a.btn--claro:hover { background: var(--bg); color: var(--ink); border-color: var(--bg); }
+  .ft a.btn--claro:hover { background: #fff; }
+  .ft__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 32px; padding-block: 48px 24px; line-height: 1.9; }
+  .ft__desc { margin-top: 0; max-width: 280px; line-height: 1.6; }
+  .ft__h { font-weight: 600; color: var(--bg); margin-bottom: 6px; }
+  .ft ul { list-style: none; margin: 0; padding: 0; columns: 2; column-gap: 20px; }
+  .ft__marca { display: flex; justify-content: center; overflow: hidden; padding: 40px 0 56px; }
+  .ft__marca :global(svg) { height: clamp(180px, 24vw, 300px) !important; }
+  .ft__l { display: inline-block; }
+  :global(.motion) .ft__l { transform: translateY(100%); }
+  .ft__base { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-block: 20px 28px; border-top: 1px solid var(--dark-line); color: var(--dark-muted); }
+</style>

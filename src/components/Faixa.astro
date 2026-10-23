@@ -1,0 +1,34 @@
+---
+/** Faixa de imagem de ponta a ponta — a "pausa" entre seções. */
+import Foto from './Foto.astro';
+interface Props { foto: string; alt: string; linha1: string; linha2: string; legenda?: string }
+const { foto, alt, linha1, linha2, legenda } = Astro.props;
+---
+<section class="fx" aria-label={`${linha1} ${linha2}`}>
+  <div class="fx__media" data-fx-media>
+    <Foto nome={foto} alt={alt} ratio="auto" wipe={false} escuro sizes="100vw" sugestao="Foto ou vídeo horizontal de evento (2400×1350): pista cheia, bar em ação" class="fx__foto" />
+  </div>
+  <div class="fx__veu" aria-hidden="true"></div>
+  <div class="wrap fx__txt">
+    <p class="fx__frase" aria-hidden="true">
+      <span class="fx-line"><span>{linha1}</span></span>
+      <span class="fx-line"><span><em class="s">{linha2}</em></span></span>
+    </p>
+    {legenda && <p class="fx__leg" data-reveal>{legenda}</p>}
+  </div>
+</section>
+
+<style>
+  .fx { position: relative; margin-top: clamp(80px, 10vw, 128px); min-height: min(88vh, 820px); display: flex; align-items: flex-end; overflow: hidden; color: #fff; background: #1e1b15; }
+  @media (max-width: 760px) { .fx { min-height: 72vh; } }
+  .fx__media { position: absolute; inset: -12% 0; will-change: transform; }
+  .fx__media :global(.foto) { height: 100%; border-radius: 0; aspect-ratio: auto !important; }
+  .fx__veu { position: absolute; inset: 0; background: linear-gradient(to top, rgba(14, 12, 9, .82) 0%, rgba(14, 12, 9, .25) 55%, rgba(14, 12, 9, .1) 100%); }
+  .fx__txt { position: relative; width: 100%; padding-block: clamp(48px, 8vw, 96px); }
+  .fx__frase { font-size: clamp(40px, 6.4vw, 96px); line-height: 1; letter-spacing: -0.04em; font-weight: 500; max-width: 1000px; }
+  .fx__frase em { color: var(--gold-soft); }
+  .fx-line { display: block; overflow: hidden; padding-bottom: .08em; }
+  .fx-line > span { display: block; }
+  :global(.motion) .fx-line > span { transform: translateY(105%); }
+  .fx__leg { margin-top: 22px; font-size: 14px; letter-spacing: .04em; color: rgba(255, 255, 255, .78); }
+</style>

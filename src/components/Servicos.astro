@@ -1,0 +1,42 @@
+---
+import Foto from './Foto.astro';
+import { servicos, formatosImpressao } from '../data/site';
+const bar = servicos.find((s) => s.slug === 'bar-de-drinks')!;
+const cards = [
+  { titulo: 'Bar de drinks', frase: bar.frase, itens: bar.inclui.slice(0, 4), href: '/servicos/bar-de-drinks', cta: 'Conhecer o bar', foto: 'bar', alt: 'Bar da Em Cena montado em evento' },
+  {
+    titulo: 'Atrações fotográficas', frase: 'A lembrança que o convidado leva pra casa.',
+    itens: ['Totem Fotográfico, Totem Retrô, Espelho Mágico e Cabine', 'Plataforma 360°, Capa de Revista e Pista de LED', `Impressão na hora: ${formatosImpressao.join(', ')}`, 'Foto original por QR Code · 4 horas com promotor'],
+    href: '#atracoes', cta: 'Ver as atrações', foto: 'atracoes', alt: 'Totem Retrô montado em evento',
+  },
+];
+---
+<section id="servicos" class="wrap section">
+  <p class="eyebrow" data-reveal>Serviços</p>
+  <h2 class="h2" data-reveal>Dois serviços que funcionam sozinhos e ficam melhores juntos.</h2>
+  <div class="grid">
+    {cards.map((c) => (
+      <article class="card" data-reveal>
+        <Foto nome={c.foto} alt={c.alt} ratio="16 / 10" zoomHover sugestao={`Foto real: ${c.alt.toLowerCase()}`} />
+        <div class="card__body">
+          <h3>{c.titulo}</h3>
+          <p class="card__frase">{c.frase}</p>
+          <ul>{c.itens.map((i) => <li>{i}</li>)}</ul>
+          <a class="link" href={c.href}>{c.cta} <span class="arr" aria-hidden="true">›</span></a>
+        </div>
+      </article>
+    ))}
+  </div>
+</section>
+
+<style>
+  .grid { margin-top: 48px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 24px; }
+  .card { background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  .card :global(.foto) { border-radius: 0; }
+  .card__body { padding: 32px; }
+  .card h3 { font-size: 24px; font-weight: 600; }
+  .card__frase { margin: 6px 0 18px; font-family: var(--serif); font-style: italic; font-size: 20px; color: var(--gold); }
+  .card ul { list-style: none; margin: 0 0 24px; padding: 0; font-size: 15px; color: var(--ink-2); }
+  .card li { padding: 10px 0; border-top: 1px solid var(--line-2); }
+  .card li:last-child { border-bottom: 1px solid var(--line-2); }
+</style>
